@@ -63,8 +63,17 @@ small{color:var(--muted)}.hidden{display:none!important}
   <div id="addNotice" class="notice hidden"></div>
  </div>
  <div class="card">
-  <h3>Fotoğraftan kelime ekleme</h3>
-  <p class="muted">Kitap sayfasının fotoğrafını ChatGPT sohbetine gönder. Kelimeleri orada çıkarıp bu uygulamaya aktarabileceğin yedek dosyasını hazırlayabiliriz. Bu sürüm fotoğrafın içindeki yazıyı kendi başına OCR ile okumaz.</p>
+  <h3>Fotoğraftan doğrudan kelime ekle</h3>
+  <p class="muted">Kitap sayfasını galeriden seç veya kamerayla çek. Uygulama fotoğraftaki yazıyı OCR ile tarar. Sonuçları kontrol edip düzenledikten sonra kelime bankana aktarabilirsin. Net ve düz çekilmiş fotoğraflarda daha iyi sonuç verir.</p>
+  <label>Kitap sayfası fotoğrafı</label>
+  <input id="photoFile" type="file" accept="image/*" capture="environment">
+  <button class="primary" id="scanPhoto">Fotoğrafı tara</button>
+  <div id="ocrStatus" class="notice hidden" aria-live="polite"></div>
+  <label>Bulunan kelimeler (İngilizce | Türkçe | eş / yakın anlamlılar)</label>
+  <textarea id="ocrText" rows="8" style="width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;font:14px system-ui;" placeholder="Tarama sonucu burada görünecek. Her kelime bir satırda olacak. Gerekirse düzelt: teacher | öğretmen | instructor, lecturer"></textarea>
+  <p class="muted">Aktarmadan önce satırları kontrol et. Bir satır şu biçimde olmalı: <b>teacher | öğretmen | instructor, lecturer</b>. Kelime türü otomatik belirlenemezse “other” olarak kaydedilir; sonradan elle düzeltebilirsin.</p>
+  <button class="primary" id="importOcr">Kelimeleri bankama aktar</button>
+  <div id="ocrImportNotice" class="notice hidden"></div>
  </div>
 </section>
 <section id="quiz" class="panel">
@@ -164,6 +173,41 @@ function renderAnalysis(){
 }
 document.getElementById("export").onclick=()=>{let blob=new Blob([JSON.stringify({words,answers},null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="yds-vocabulary-yedek.json";a.click();URL.revokeObjectURL(a.href)};
 document.getElementById("importFile").onchange=async e=>{let f=e.target.files[0];if(!f)return;try{let d=JSON.parse(await f.text());if(!Array.isArray(d.words)||!Array.isArray(d.answers))throw Error();words=d.words;answers=d.answers;save();renderWords();alert("Yedek başarıyla yüklendi.")}catch{alert("Yedek dosyası okunamadı.")}};
+// Fotoğraftan OCR: Tesseract.js tarayıcıda çalışır; fotoğraf sunucuya gönderilmez.
+let tesseractLoader=null;
+async function getTesseract(){
+ if(window.Tesseract)return window.Tesseract;
+ if(!tesseractLoader)tesseractLoader=new Promise((resolve,reject)=>{const sc=document.createElement("script");sc.src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js";sc.onload=()=>resolve(window.Tesseract);sc.onerror=()=>reject(new Error("OCR kütüphanesi yüklenemedi. İnternet bağlantını kontrol et."));document.head.appendChild(sc)});
+ return tesseractLoader;
+}
+function ocrWordsToRows(data,imageWidth){
+ const ws=(data.words||[]).filter(w=>w.text&&w.text.trim()&&w.confidence>20);
+ if(!ws.length)return (data.text||"").trim();
+ ws.sort((a,b)=>((a.bbox.y0+a.bbox.y1)/2)-((b.bbox.y0+b.bbox.y1)/2)||a.bbox.x0-b.bbox.x0);
+ const heights=ws.map(w=>Math.max(1,w.bbox.y1-w.bbox.y0)).sort((a,b)=>a-b);
+ const tol=Math.max(9,(heights[Math.floor(heights.length/2)]||16)*0.65);
+ const lines=[];
+ for(const w of ws){const cy=(w.bbox.y0+w.bbox.y1)/2;let line=lines.find(l=>Math.abs(l.cy-cy)<=tol);if(!line){line={cy,words:[]};lines.push(line)}line.words.push(w);line.cy=line.words.reduce((a,x)=>a+(x.bbox.y0+x.bbox.y1)/2,0)/line.words.length}
+ lines.sort((a,b)=>a.cy-b.cy);
+ return lines.map(line=>{const cols=[[],[],[]];line.words.sort((a,b)=>a.bbox.x0-b.bbox.x0).forEach(w=>{const x=(w.bbox.x0+w.bbox.x1)/2/imageWidth;const c=x<0.31?0:x<0.64?1:2;cols[c].push(w.text)});return cols.map(c=>c.join(" ")).join(" | ")}).join("\n");
+}
+document.getElementById("scanPhoto").onclick=async()=>{
+ const file=document.getElementById("photoFile").files[0],status=document.getElementById("ocrStatus"),btn=document.getElementById("scanPhoto");
+ if(!file){status.textContent="Önce galeriden bir fotoğraf seç veya kamerayla çek.";status.classList.remove("hidden");return}
+ status.classList.remove("hidden");status.textContent="OCR hazırlanıyor… İlk kullanımda dil dosyaları indirilebilir; lütfen bekle.";btn.disabled=true;
+ try{const T=await getTesseract();const worker=await T.createWorker("eng+tur",1,{logger:m=>{if(m.status==="recognizing text")status.textContent=`Fotoğraf taranıyor: %${Math.round((m.progress||0)*100)}`}});const result=await worker.recognize(file);await worker.terminate();document.getElementById("ocrText").value=ocrWordsToRows(result.data,file.width||result.data.imageWidth||1000);status.textContent="Tarama tamamlandı. Şimdi bulunan satırları kontrol et; sütunlar kaymışsa düzelt.";
+ }catch(err){status.textContent="Tarama yapılamadı: "+(err.message||err)+". Fotoğrafı daha net çekip tekrar dene."}finally{btn.disabled=false}
+};
+document.getElementById("importOcr").onclick=()=>{
+ const box=document.getElementById("ocrImportNotice"),raw=document.getElementById("ocrText").value.trim();box.classList.remove("hidden");
+ if(!raw){box.textContent="Önce fotoğrafı tara veya metni kutuya gir.";return}
+ let added=0,updated=0,skipped=0;
+ for(const line of raw.split(/\n+/)){const parts=line.split(/\s*\|\s*/);if(parts.length<2){skipped++;continue}const en=parts[0].trim().replace(/^[-•·\s]+|[-•·\s]+$/g,"");const tr=parts[1].trim();const syn=(parts.slice(2).join(" ")).split(/[,;]/).map(x=>x.trim()).filter(Boolean);if(!en||!tr){skipped++;continue}
+ const key=en.toLocaleLowerCase("en");let found=words.find(w=>w.en.toLocaleLowerCase("en")===key||w.syn.some(x=>x.toLocaleLowerCase("en")===key));
+ if(found){if(found.en.toLocaleLowerCase("en")!==key&&!found.syn.some(x=>x.toLocaleLowerCase("en")===key))found.syn.push(en);found.syn=[...new Set([...found.syn,...syn])];updated++}else{words.push({en,tr,type:"other",syn:[...new Set(syn)]});added++}
+ }
+ save();renderWords();box.textContent=`Aktarım tamamlandı: ${added} yeni kelime eklendi, ${updated} mevcut kayıt güncellendi, ${skipped} satır atlandı. Kelime türlerini istersen elle düzenleyebilirsin.`;
+};
 updateStats();renderWords();
 if("serviceWorker" in navigator && location.protocol.startsWith("http"))navigator.serviceWorker.register("./sw.js").catch(()=>{});
 </script>

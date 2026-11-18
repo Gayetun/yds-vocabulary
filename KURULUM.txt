@@ -1,0 +1,25 @@
+YDS VOCABULARY – GÜNCELLEME VE KULLANIM
+
+Bu klasördeki dosyalar GitHub Pages üzerinde yayınlanacak PWA uygulamasıdır.
+
+GÜNCELLEME:
+1. GitHub'da Gayetun/yds-vocabulary deposunu aç.
+2. index.html dosyasını açıp çöp kutusu ile silmek yerine Add file > Upload files yoluyla bu klasördeki yeni index.html dosyasını yükle.
+3. GitHub aynı isimli dosyanın değiştirildiğini gösterecektir. Commit changes ile onayla.
+4. 1-3 dakika sonra https://gayetun.github.io/yds-vocabulary/ adresini yenile.
+5. Telefonda eski görünüm kalırsa Chrome'da sayfayı yenile veya site verisini temizlemeden önce uygulamayı kapatıp yeniden aç.
+
+FOTOĞRAFTAN KELİME EKLEME:
+1. Kelime Bankası sekmesinde Fotoğraftan doğrudan kelime ekle alanına in.
+2. Kitap sayfası fotoğrafını seç veya kamerayla çek.
+3. Fotoğrafı tara butonuna bas. İlk kullanımda OCR motoru ve İngilizce/Türkçe dil verileri internetten yüklenir.
+4. Tanınan metni kontrol et. Her satırı şu biçimde düzenle:
+   teacher | öğretmen | instructor, lecturer, mentor
+5. Kelimeleri bankama aktar butonuna bas.
+
+NOTLAR:
+- OCR işlemi tarayıcıda yapılır; fotoğraf uygulama sunucusuna gönderilmez.
+- İlk OCR kullanımı internet bağlantısı gerektirir.
+- Eğik, bulanık, düşük çözünürlüklü veya karmaşık tablo fotoğraflarında OCR hataları olabilir. Aktarmadan önce satırları mutlaka kontrol et.
+- Fotoğraftan aktarılan kelimelerin türü varsayılan olarak other olur; gerekirse elle düzenle.
+- Kelimeler ve test sonuçları cihazın tarayıcı hafızasında saklanır. Yedek sekmesini düzenli kullan.
