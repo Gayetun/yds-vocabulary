@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#153c59">
+<meta name="description" content="Kişisel YDS kelime bankası, test ve tekrar uygulaması">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<title>YDS Vocabulary</title>
+<style>
+:root{--navy:#153c59;--blue:#267da8;--bg:#f3f6f8;--card:#fff;--ink:#172b3a;--muted:#657783;--line:#dce5eb;--green:#19845b;--red:#c34444}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px system-ui,-apple-system,Segoe UI,sans-serif}
+header{background:var(--navy);color:white;padding:22px 18px 18px;border-radius:0 0 22px 22px}
+header h1{font-size:25px;margin:0 0 4px}header p{margin:0;color:#d4e3ed;font-size:13px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:17px}.stat{background:#ffffff19;border:1px solid #ffffff25;border-radius:12px;padding:10px}.stat b{display:block;font-size:23px}.stat span{font-size:11px;color:#d4e3ed}
+nav{display:flex;gap:7px;padding:13px 12px 5px;position:sticky;top:0;background:var(--bg);z-index:2}
+nav button{flex:1;padding:11px 4px;border:1px solid var(--line);background:white;border-radius:11px;color:var(--ink);font-weight:650;font-size:12px}
+nav button.active{background:var(--navy);color:white;border-color:var(--navy)}
+main{padding:10px 13px 35px;max-width:720px;margin:auto}.panel{display:none}.panel.active{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:15px;margin:10px 0;box-shadow:0 2px 7px #18374b08}
+h2{font-size:19px;margin:5px 0 12px}h3{font-size:16px;margin:0 0 8px}
+label{display:block;font-size:12px;color:var(--muted);margin:10px 0 5px}
+input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;background:white;color:var(--ink);font:inherit}
+button.primary{background:var(--blue);color:white;border:0;border-radius:11px;padding:12px 15px;font-weight:700;width:100%;margin-top:12px}
+button.secondary{background:#edf3f6;color:var(--navy);border:1px solid var(--line);border-radius:10px;padding:10px;font-weight:650}
+.word{padding:12px 0;border-bottom:1px solid var(--line)}.word:last-child{border:0}.wordtop{display:flex;justify-content:space-between;gap:10px}.word strong{font-size:17px}.tag{font-size:10px;background:#e9f2f7;color:#285b78;border-radius:20px;padding:4px 8px;white-space:nowrap}.muted{color:var(--muted);font-size:13px}.syn{margin-top:6px;color:#285b78;font-size:13px}
+.row{display:flex;gap:8px}.row>*{flex:1}.option{display:block;width:100%;text-align:left;padding:13px;border:1px solid var(--line);background:white;border-radius:11px;margin:8px 0;color:var(--ink);font:inherit}.option.chosen{border:2px solid var(--blue);background:#edf6fa}.option.correct{border:2px solid var(--green);background:#effaf5}.option.wrong{border:2px solid var(--red);background:#fff3f3}
+.notice{padding:11px;border-radius:10px;background:#edf5f8;color:#285b78;font-size:13px;margin:10px 0}.danger{color:var(--red)}.good{color:var(--green)}
+progress{width:100%;height:9px;accent-color:var(--green)}
+small{color:var(--muted)}.hidden{display:none!important}
+</style>
+</head>
+<body>
+<header>
+  <h1>YDS Vocabulary</h1><p>Kişisel kelime bankan · Öğren · Test et · Tekrar et</p>
+  <div class="stats">
+    <div class="stat"><b id="wordCount">12</b><span>KELİME</span></div>
+    <div class="stat"><b id="testCount">0</b><span>CEVAPLANAN</span></div>
+    <div class="stat"><b id="wrongCount">0</b><span>YANLIŞ</span></div>
+  </div>
+</header>
+<nav>
+ <button class="active" data-tab="bank">Kelime Bankası</button>
+ <button data-tab="quiz">Test</button>
+ <button data-tab="analysis">Analiz</button>
+ <button data-tab="backup">Yedek</button>
+</nav>
+<main>
+<section id="bank" class="panel active">
+ <div class="card">
+  <h2>Kelime bankam</h2>
+  <input id="search" placeholder="Kelime, anlam veya eş anlamlı ara…">
+  <div id="wordList"></div>
+ </div>
+ <div class="card">
+  <h3>Yeni kelime ekle</h3>
+  <label>İngilizce kelime</label><input id="en" placeholder="ör. improve">
+  <label>Türkçe karşılığı</label><input id="tr" placeholder="ör. geliştirmek">
+  <label>Kelime türü</label><select id="type"><option>verb</option><option>noun</option><option>adjective</option><option>adverb</option><option>preposition</option><option>conjunction</option><option>determiner</option><option>pronoun</option><option>other</option></select>
+  <label>Eş / yakın anlamlılar (virgülle ayır)</label><input id="syn" placeholder="ör. enhance, develop">
+  <button class="primary" id="addWord">Kelimeyi kaydet</button>
+  <div id="addNotice" class="notice hidden"></div>
+ </div>
+ <div class="card">
+  <h3>Fotoğraftan kelime ekleme</h3>
+  <p class="muted">Kitap sayfasının fotoğrafını ChatGPT sohbetine gönder. Kelimeleri orada çıkarıp bu uygulamaya aktarabileceğin yedek dosyasını hazırlayabiliriz. Bu sürüm fotoğrafın içindeki yazıyı kendi başına OCR ile okumaz.</p>
+ </div>
+</section>
+<section id="quiz" class="panel">
+ <div class="card" id="quizSetup">
+  <h2>Kelime testi</h2><p class="muted">Bankandaki kelimelerle kendini dene.</p>
+  <label>Test türü</label><select id="mode"><option value="mixed">Karışık</option><option value="en-tr">İngilizce → Türkçe</option><option value="tr-en">Türkçe → İngilizce</option><option value="syn">Eş anlamlı</option></select>
+  <label>Soru sayısı</label><select id="qty"><option>5</option><option selected>10</option><option>20</option></select>
+  <button class="primary" id="startQuiz">Testi başlat</button>
+ </div>
+ <div class="card hidden" id="quizPlay">
+  <div class="muted" id="qProgress"></div><progress id="qBar" value="0" max="100"></progress>
+  <p class="muted" id="qType"></p><h2 id="qPrompt"></h2><div id="options"></div>
+  <div id="feedback" class="notice hidden"></div>
+  <button class="primary" id="nextQ" disabled>Cevabı kontrol et</button>
+ </div>
+ <div class="card hidden" id="quizDone">
+  <h2>Test tamamlandı</h2><h1 id="score"></h1><div id="review"></div>
+  <button class="primary" id="again">Yeni test</button>
+ </div>
+</section>
+<section id="analysis" class="panel">
+ <div class="card"><h2>Öğrenme analizi</h2><div id="analysisBody"></div></div>
+ <div class="card"><h3>Tekrar listesi</h3><div id="weakList"></div></div>
+</section>
+<section id="backup" class="panel">
+ <div class="card"><h2>Verilerini koru</h2><p class="muted">Kelimelerin ve test sonuçların bu telefonda saklanır. Tarayıcı verilerini silersen kaybolabilir. Düzenli yedek al.</p>
+ <button class="primary" id="export">Yedek dosyasını indir</button>
+ <label>Yedekten geri yükle</label><input type="file" id="importFile" accept="application/json">
+ <div class="notice">Yeni telefona geçerken veya tarayıcı verilerini temizlemeden önce yedek dosyanı indir.</div>
+ </div>
+</section>
+</main>
+<script>
+const starter=[
+{en:"from",tr:"-den / -dan",type:"preposition",syn:[]},
+{en:"a",tr:"bir",type:"determiner",syn:[]},
+{en:"teacher",tr:"öğretmen",type:"noun",syn:["instructor","lecturer","mentor","tutor","educator","educationalist"]},
+{en:"her",tr:"onun (kadın)",type:"determiner",syn:[]},
+{en:"class",tr:"sınıf",type:"noun",syn:[]},
+{en:"small",tr:"küçük",type:"adjective",syn:["tiny"]},
+{en:"but",tr:"ama",type:"conjunction",syn:[]},
+{en:"nice",tr:"hoş",type:"adjective",syn:["pleasant"]},
+{en:"student",tr:"öğrenci",type:"noun",syn:["learner","pupil"]},
+{en:"all",tr:"hepsi, tümü",type:"pronoun",syn:[]},
+{en:"very",tr:"çok",type:"adverb",syn:["truly","really"]},
+{en:"good",tr:"iyi",type:"adjective",syn:[]}
+];
+let words=load("yds_words",starter), answers=load("yds_answers",[]), quiz=[],qi=0,chosen=null,checked=false;
+function load(k,f){try{return JSON.parse(localStorage.getItem(k))??f}catch{return f}}
+function save(){localStorage.setItem("yds_words",JSON.stringify(words));localStorage.setItem("yds_answers",JSON.stringify(answers));updateStats()}
+function updateStats(){document.getElementById("wordCount").textContent=words.length;document.getElementById("testCount").textContent=answers.length;document.getElementById("wrongCount").textContent=answers.filter(a=>!a.correct).length}
+function renderWords(){
+ const term=document.getElementById("search").value.toLowerCase();
+ document.getElementById("wordList").innerHTML=words.filter(w=>(w.en+" "+w.tr+" "+w.syn.join(" ")).toLowerCase().includes(term)).sort((a,b)=>a.en.localeCompare(b.en)).map(w=>`<div class="word"><div class="wordtop"><strong>${esc(w.en)}</strong><span class="tag">${esc(w.type)}</span></div><div>${esc(w.tr)}</div>${w.syn.length?`<div class="syn">Eş / yakın: ${w.syn.map(esc).join(", ")}</div>`:""}</div>`).join("")||'<p class="muted">Eşleşen kelime bulunamadı.</p>';
+}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+document.getElementById("search").addEventListener("input",renderWords);
+document.getElementById("addWord").onclick=()=>{
+ let en=document.getElementById("en").value.trim(),tr=document.getElementById("tr").value.trim(),type=document.getElementById("type").value,syn=document.getElementById("syn").value.split(",").map(s=>s.trim()).filter(Boolean);
+ if(!en||!tr)return;
+ let e=en.toLowerCase(),found=words.find(w=>w.en.toLowerCase()===e||w.syn.some(s=>s.toLowerCase()===e));
+ if(found){if(found.en.toLowerCase()!==e&&!found.syn.some(s=>s.toLowerCase()===e))found.syn.push(en);found.syn=[...new Set([...found.syn,...syn])];document.getElementById("addNotice").textContent="Bu kelime zaten kayıtlıydı; mevcut kayda eş anlamlı olarak eklendi."}
+ else{words.push({en,tr,type,syn:[...new Set(syn)]});document.getElementById("addNotice").textContent="Yeni kelime eklendi."}
+ document.getElementById("addNotice").classList.remove("hidden");["en","tr","syn"].forEach(id=>document.getElementById(id).value="");save();renderWords();
+};
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{document.querySelectorAll("nav button").forEach(x=>x.classList.toggle("active",x===b));document.querySelectorAll(".panel").forEach(x=>x.classList.toggle("active",x.id===b.dataset.tab));if(b.dataset.tab==="analysis")renderAnalysis()});
+function makeQuestion(w,kind){
+ let answer=kind==="tr-en"?w.en:kind==="syn"?w.syn[Math.floor(Math.random()*w.syn.length)]:w.tr;
+ let pool=kind==="tr-en"?words.map(x=>x.en):kind==="syn"?words.flatMap(x=>x.syn):words.map(x=>x.tr);
+ let opts=[answer,...[...new Set(pool.filter(x=>x.toLowerCase()!==answer.toLowerCase()))].sort(()=>Math.random()-.5).slice(0,3)].sort(()=>Math.random()-.5);
+ return {w,kind,answer,opts,prompt:kind==="tr-en"?w.tr:w.en};
+}
+document.getElementById("startQuiz").onclick=()=>{
+ let mode=document.getElementById("mode").value,pool=mode==="syn"?words.filter(w=>w.syn.length):words.slice();
+ if(!pool.length){alert("Bu test türü için yeterli eş anlamlı kelime yok.");return}
+ pool.sort(()=>Math.random()-.5);let n=Math.min(+document.getElementById("qty").value,pool.length);
+ quiz=pool.slice(0,n).map((w,i)=>makeQuestion(w,mode==="mixed"?(i%3===0?"en-tr":i%3===1?"tr-en":w.syn.length?"syn":"en-tr"):mode));
+ qi=0;chosen=null;checked=false;document.getElementById("quizSetup").classList.add("hidden");document.getElementById("quizDone").classList.add("hidden");document.getElementById("quizPlay").classList.remove("hidden");showQ();
+};
+function showQ(){
+ let q=quiz[qi];chosen=null;checked=false;document.getElementById("qProgress").textContent=`Soru ${qi+1} / ${quiz.length}`;document.getElementById("qBar").value=qi/quiz.length*100;document.getElementById("qType").textContent=q.kind==="syn"?"EŞ ANLAMLI KELİME":q.kind==="tr-en"?"TÜRKÇE → İNGİLİZCE":"İNGİLİZCE → TÜRKÇE";document.getElementById("qPrompt").textContent=q.prompt;
+ document.getElementById("feedback").classList.add("hidden");document.getElementById("nextQ").disabled=true;document.getElementById("nextQ").textContent="Cevabı kontrol et";
+ document.getElementById("options").innerHTML=q.opts.map((o,i)=>`<button class="option" data-i="${i}">${esc(o)}</button>`).join("");
+ document.querySelectorAll(".option").forEach(b=>b.onclick=()=>{if(checked)return;chosen=q.opts[+b.dataset.i];document.querySelectorAll(".option").forEach(x=>x.classList.toggle("chosen",x===b));document.getElementById("nextQ").disabled=false});
+}
+document.getElementById("nextQ").onclick=()=>{
+ let q=quiz[qi],fb=document.getElementById("feedback");
+ if(!checked){checked=true;let ok=chosen===q.answer;answers.push({word:q.w.en,user:chosen,answer:q.answer,correct:ok,date:new Date().toISOString()});save();fb.textContent=ok?"Doğru cevap!":`Yanlış. Doğru cevap: ${q.answer} · ${q.w.en}: ${q.w.tr}`;fb.classList.remove("hidden");fb.classList.toggle("good",ok);fb.classList.toggle("danger",!ok);document.querySelectorAll(".option").forEach(b=>{if(b.textContent===q.answer)b.classList.add("correct");else if(b.textContent===chosen)b.classList.add("wrong")});document.getElementById("nextQ").textContent=qi===quiz.length-1?"Sonuçları gör":"Sonraki soru"}
+ else if(qi<quiz.length-1){qi++;showQ()}else{document.getElementById("quizPlay").classList.add("hidden");document.getElementById("quizDone").classList.remove("hidden");let recent=answers.slice(-quiz.length),correct=recent.filter(a=>a.correct).length;document.getElementById("score").textContent=`${correct} / ${recent.length} doğru · %${Math.round(correct/recent.length*100)}`;document.getElementById("review").innerHTML=recent.filter(a=>!a.correct).map(a=>`<p><b>${esc(a.word)}</b> — senin cevabın: ${esc(a.user)}<br><span class="good">Doğrusu: ${esc(a.answer)}</span></p>`).join("")||'<p class="good">Harika! Hiç yanlışın yok.</p>'}
+};
+document.getElementById("again").onclick=()=>{document.getElementById("quizDone").classList.add("hidden");document.getElementById("quizSetup").classList.remove("hidden")};
+function renderAnalysis(){
+ let recent=answers.filter(a=>Date.now()-new Date(a.date).getTime()<7*86400000),correct=recent.filter(a=>a.correct).length;
+ document.getElementById("analysisBody").innerHTML=`<h2>${recent.length?`%${Math.round(correct/recent.length*100)} başarı`:"Henüz haftalık veri yok"}</h2><p class="muted">Son 7 gün: ${recent.length} cevap · ${correct} doğru · ${recent.length-correct} yanlış</p><p class="muted">Tüm zamanlar: ${answers.length} cevap · ${answers.filter(a=>a.correct).length} doğru</p>`;
+ let counts={};answers.filter(a=>!a.correct).forEach(a=>counts[a.word]=(counts[a.word]||0)+1);
+ let list=Object.entries(counts).sort((a,b)=>b[1]-a[1]);document.getElementById("weakList").innerHTML=list.length?list.map(([w,n])=>`<div class="word"><b>${esc(w)}</b> <span class="danger">· ${n} yanlış</span><div class="muted">${esc(words.find(x=>x.en===w)?.tr||"")}</div></div>`).join(""):'<p class="muted">Henüz yanlış kelime yok.</p>';
+}
+document.getElementById("export").onclick=()=>{let blob=new Blob([JSON.stringify({words,answers},null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="yds-vocabulary-yedek.json";a.click();URL.revokeObjectURL(a.href)};
+document.getElementById("importFile").onchange=async e=>{let f=e.target.files[0];if(!f)return;try{let d=JSON.parse(await f.text());if(!Array.isArray(d.words)||!Array.isArray(d.answers))throw Error();words=d.words;answers=d.answers;save();renderWords();alert("Yedek başarıyla yüklendi.")}catch{alert("Yedek dosyası okunamadı.")}};
+updateStats();renderWords();
+if("serviceWorker" in navigator && location.protocol.startsWith("http"))navigator.serviceWorker.register("./sw.js").catch(()=>{});
+</script>
+</body></html>
